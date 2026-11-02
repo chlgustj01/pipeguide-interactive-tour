@@ -7,14 +7,15 @@ const { chromium } = require('playwright');
     const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
     const errors = [];
     page.on('pageerror', error => errors.push(error.message));
-    await page.goto((process.env.PIPEGUIDE_BASE_URL || 'http://127.0.0.1:8000') + '/presentation.html');
+    await page.goto(process.env.PIPEGUIDE_PRESENTATION_URL || (process.env.PIPEGUIDE_BASE_URL || 'http://127.0.0.1:8000') + '/presentation.html');
+    if (process.env.PIPEGUIDE_OFFLINE) await page.context().setOffline(true);
     assert.equal(await page.locator('section.slide').count(), 22);
     assert.equal(await page.locator('.pg-live-launch').count(), 5);
     await page.evaluate(() => { PGSlides.go(6); document.querySelector('#live-mode').value = 'manual'; });
     await page.locator('section.slide.active .pg-live-launch').click();
     await page.waitForFunction(() => window.PGLive.api && PGGuide.state.step === 0 && !document.querySelector('#live-run').disabled);
     // A real iframe click must execute exactly once and advance the guide.
-    const frame = page.frames().find(f => f.url().includes('/program.html'));
+    const frame = await (await page.locator('#live-app').elementHandle()).contentFrame();
     await frame.locator('[data-dw="sample"]').click();
     await page.waitForFunction(() => PGGuide.state.index === 1 && !PGGuide.state.busy);
     await page.click('#live-pause');

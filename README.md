@@ -1,5 +1,14 @@
 # PipeGuide Interactive Tour
 
+## 발표 실행 · 먼저 읽어 주세요
+
+1. GitHub에서 ZIP을 받은 뒤 **전체 압축을 해제**합니다. ZIP 내부 미리보기에서 HTML을 열지 마세요.
+2. 압축을 푼 폴더의 **`PipeGuide-Guided-Live.html`**을 Chrome 또는 Edge로 엽니다.
+3. 7~11장의 `STEP LIVE` 버튼을 순서대로 누릅니다. 중간 STEP부터 시작하려면 `샘플로 이 STEP 준비`를 누릅니다.
+
+`PipeGuide-Guided-Live.html`은 프로그램·가이드·영상이 모두 포함된 단일 파일입니다. 이 파일은 옆의 JS나 프로그램 HTML 파일을 찾지 않습니다. `presentation.html`은 개발용 분리 버전이며 아래 HTTP 서버 실행 방법을 사용합니다. 기존 첨부의 `PipeGuide_발표_LIVE.html`은 새 실행 파일이 아닙니다.
+
+
 PipeGuide Twin v10.4 기반 비영리 교육용 인터랙티브 가이드입니다.
 
 - index.html: 튜토리얼
@@ -43,3 +52,14 @@ node tests/live-presentation.cjs
 ```
 
 다섯 STEP의 실제 계산, 배관 20→21개 증가, 변경 이력, 단일 iframe 유지, STEP 복원, 직접 클릭, 자동 진행과 일시정지·재개, 슬라이드 복귀를 검증합니다. 첨부 발표와 동영상의 출처·원본 슬라이드 내용은 유지했습니다.
+
+
+단일 파일을 다시 생성하려면 `python3 scripts/build-standalone.py`를 실행합니다. 단일 파일 브라우저 회귀 테스트는 다음과 같습니다.
+
+```sh
+PIPEGUIDE_PRESENTATION_URL=http://127.0.0.1:8000/PipeGuide-Guided-Live.html PIPEGUIDE_OFFLINE=1 node tests/live-presentation.cjs
+```
+
+클라우드의 브라우저 정책은 `file://` 탐색을 차단하므로 여기서는 HTTP로 단일 파일을 연 다음 네트워크를 끊어 내장 프로그램 실행을 검증합니다.
+
+자동 매크로 회귀 테스트: `node tests/auto-guide.cjs`. 파일을 연 후 네트워크를 차단하고, 로딩 도중 모드 변경·실행을 시도해도 실행이 차단되는지 확인한 뒤, 화면의 자동 가이드로 5개 STEP을 끝까지 진행합니다. 실행 브리지가 준비되기 전에는 모드 변경·재개·현재 기능 실행·상태 복원 버튼이 비활성화됩니다.

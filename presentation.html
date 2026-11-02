@@ -499,7 +499,7 @@ aside{display:none}
     <div class="n g"><b>④ 간섭 · 이격 검사<span class="tag2 g">자동</span></b>기준 25 mm · 문제 목록으로</div>
   </div>
   <aside>두 번째 단계는 3D 생성입니다. P&amp;ID에는 좌표가 없기 때문에 장비 위치는 저희가 계통별로 가정해서 놓았습니다. 그 위에서 노즐에서 노즐까지 A* 길찾기로 배관 20개를 모두 이었습니다. 다만 '만들지 못한 배관 0개'는 구역을 자동으로 넓힌 결과도 포함입니다. 질문이 많이 나올 부분이라 미리 말씀드리면, 0.5m 격자는 길을 찾을 때만 쓰고, 이격은 관 바깥 표면 사이의 실제 거리를 밀리미터 단위로 따로 계산합니다.</aside>
-<div class="pg-live-launch-wrap" style="position:absolute;z-index:65;right:75px;bottom:95px"><button class="pg-live-launch" type="button" data-pg-step="8" aria-label="STEP 2 · 실제 3D 프로그램 조작">● LIVE · 실제 PipeGuide 조작하기</button></div></section>
+</section>
 
 <!-- 11 STEP3 -->
 <section class="slide" data-glow="3">
@@ -542,7 +542,7 @@ aside{display:none}
   </div>
   <p class="footer">자동 검사 통과 · 바닥판 관통 1곳은 표시만 (허가 · 보강은 사람이 확인) · 선체 구조 · 정비 공간 · 선급 규칙은 사람이 확인 · 적용 시 Rev.B와 변경 이력 저장</p>
   <aside>네 번째 단계는 경로 개선입니다. 문제 구간 앞뒤 1.5m만 잘라서 다른 길을 다시 찾고, 나머지 배관과 양 끝은 그대로 둡니다. 간섭이 생기거나 이격 기준을 못 지키는 안은 아예 보여주지 않습니다. 이번 사례에서는 그 조건을 통과한 후보가 안 A 하나였습니다. 오른쪽 그래프가 기존과 안 A의 비교입니다. 이격은 22mm에서 273mm로 기준을 넘었고, 길이는 22.3m에서 20.8m, 엘보는 10개에서 8개, 용접은 25곳에서 21곳으로 줄었습니다. 바닥판 관통 같은 항목은 프로그램이 표시만 하고, 판단은 설계자가 합니다.</aside>
-<div class="pg-live-launch-wrap" style="position:absolute;z-index:65;right:75px;bottom:95px"><button class="pg-live-launch" type="button" data-pg-step="10" aria-label="STEP 4 · 실제 경로 개선 조작">● LIVE · 실제 PipeGuide 조작하기</button></div></section>
+</section>
 
 <!-- 11 VIBE ASK -->
 <section class="slide" data-glow="2">
@@ -581,7 +581,7 @@ aside{display:none}
     <span style="position:absolute;left:20px;bottom:16px;padding:6px 14px;border-radius:8px;background:rgba(0,0,0,.8);font-size:18px;color:#DDF5E4">실제 앱 화면 녹화 · AI 설계 도우미에 "733-443 위로 돌아가게" 입력 (2배속)</span>
   </div>
   <aside>실제 화면으로 보겠습니다. 경로 개선 화면의 AI 설계 도우미에 "733-443 위로 돌아가게"라고 입력합니다. (영상) 말을 경로 변경 명령으로 바꾸고, 위쪽으로 유도한 후보를 바로 만들어 줍니다.</aside>
-<div class="pg-live-launch-wrap" style="position:absolute;z-index:65;right:75px;bottom:95px"><button class="pg-live-launch" type="button" data-pg-step="12" aria-label="AI 설계 도우미 · 실제 입력 체험">● LIVE · 실제 PipeGuide 조작하기</button></div></section>
+</section>
 
 <!-- 14 DIFF -->
 <section class="slide" data-glow="2">
@@ -868,5 +868,5 @@ aside{display:none}
 </script>
 
 <link rel="stylesheet" href="guided-presentation.css">
-<script src="pacing.js"></script><script src="presentation-bridge.js"></script><script src="guided-tour.js"></script>
+<script src="pacing.js" onerror="alert('필요한 파일이 없습니다. ZIP 전체를 압축 해제하거나 단일 파일 PipeGuide-Guided-Live.html을 열어 주세요.')"></script><script src="presentation-bridge.js"></script><script src="guided-tour.js"></script>
 </body></html>
