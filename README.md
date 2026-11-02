@@ -63,3 +63,7 @@ PIPEGUIDE_PRESENTATION_URL=http://127.0.0.1:8000/PipeGuide-Guided-Live.html PIPE
 클라우드의 브라우저 정책은 `file://` 탐색을 차단하므로 여기서는 HTTP로 단일 파일을 연 다음 네트워크를 끊어 내장 프로그램 실행을 검증합니다.
 
 자동 매크로 회귀 테스트: `node tests/auto-guide.cjs`. 파일을 연 후 네트워크를 차단하고, 로딩 도중 모드 변경·실행을 시도해도 실행이 차단되는지 확인한 뒤, 화면의 자동 가이드로 5개 STEP을 끝까지 진행합니다. 실행 브리지가 준비되기 전에는 모드 변경·재개·현재 기능 실행·상태 복원 버튼이 비활성화됩니다.
+
+로컬 파일의 `origin: null`에서도 작동하도록 발표와 앱 사이의 제어는 `postMessage`로만 전달합니다. 부모 화면은 iframe의 전역 변수나 DOM을 읽지 않습니다. Spotlight 좌표, 직접 클릭 알림, 실행 명령과 결과는 메시지 브리지가 전달합니다. iframe은 `allow-same-origin` 없는 sandbox로 실행하며, 자동 가이드 테스트는 직접 `PGTour` 접근이 실제로 `SecurityError`로 차단되는 조건에서 전체 시연을 검증합니다.
+
+수정본 확인: LIVE 화면 상단에 `DX ACADEMY · PIPEGUIDE · LIVE v2`가 표시됩니다.

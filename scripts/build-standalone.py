@@ -3,10 +3,10 @@ from pathlib import Path
 import json
 root = Path(__file__).resolve().parent.parent
 presentation = (root / 'presentation.html').read_text()
-app = (root / 'program.html').read_text()
+app = (root / 'program.html').read_text().replace('parent.PGPresentation', 'window.PGPresentation')
 bridge = (root / 'live-app-bridge.js').read_text()
 head, tail = app.rsplit('</body>', 1)
-app = head + '<script>\n' + bridge + '\n</script>\n</body>' + tail
+app = head + '<script>\n' + (root / 'pacing.js').read_text() + '\n' + bridge + '\n</script>\n</body>' + tail
 payload = '<script type="application/json" id="pg-embedded-program">' + json.dumps(app, ensure_ascii=False).replace('<', '\\u003c') + '</script>'
 presentation = presentation.replace('<link rel="stylesheet" href="guided-presentation.css">', '<style>\n' + (root / 'guided-presentation.css').read_text() + '\n</style>\n' + payload)
 # Font fallback makes the standalone presentation independent of network access.

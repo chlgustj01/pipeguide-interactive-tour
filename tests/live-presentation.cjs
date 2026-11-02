@@ -16,7 +16,12 @@ const { chromium } = require('playwright');
     await page.waitForFunction(() => window.PGLive.api && PGGuide.state.step === 0 && !document.querySelector('#live-run').disabled);
     // A real iframe click must execute exactly once and advance the guide.
     const frame = await (await page.locator('#live-app').elementHandle()).contentFrame();
-    await frame.locator('[data-dw="sample"]').click();
+    const point = await page.evaluate(async () => {
+      const r = await PGLive.api.target('[data-dw="sample"]');
+      const c = document.querySelector('#live-canvas').getBoundingClientRect();
+      return {x:c.x+(r.x+r.width/2)*c.width/1400,y:c.y+(r.y+r.height/2)*c.height/880};
+    });
+    await page.mouse.click(point.x,point.y);
     await page.waitForFunction(() => PGGuide.state.index === 1 && !PGGuide.state.busy);
     await page.click('#live-pause');
     assert.equal(await page.evaluate(() => PGGuide.state.paused), true);
@@ -25,8 +30,7 @@ const { chromium } = require('playwright');
     await page.selectOption('#live-mode', 'manual');
     await page.evaluate(() => PGGuide.stop());
     const results = await page.evaluate(async () => {
-      const api = PGLive.api, w = PGLive.frame.contentWindow;
-      w.__presentationInstance = 'retained';
+      const api = PGLive.api, originalFrame = PGLive.frame;
       const groups = [
         ['review', 'item', 'check', 'ready', 'confirmReady'],
         ['build', 'three', 'real', 'selectPipe', 'rotate', 'fit'],
@@ -37,17 +41,17 @@ const { chromium } = require('playwright');
       const out = [];
       for (let step = 0; step < groups.length; step++) {
         if (step) await api.enter(step);
-        const before = api.summary();
+        const before = await api.summary();
         for (const action of groups[step]) await api.action(action);
-        const after = api.summary();
+        const after = await api.summary();
         if (step === 2) {
           await api.restore(step);
-          if (api.summary().dn !== before.dn) throw Error('STEP 03 restore failed');
+          if ((await api.summary()).dn !== before.dn) throw Error('STEP 03 restore failed');
           for (const action of groups[step]) await api.action(action);
         }
         out.push({ step, before, after });
       }
-      if (w.__presentationInstance !== 'retained') throw Error('iframe instance replaced');
+      if (PGLive.frame !== originalFrame) throw Error('iframe instance replaced');
       return out;
     });
     assert.equal(results[1].after.lines, 20);

@@ -18,12 +18,15 @@ const { chromium } = require('playwright');
    return {unready,runDisabled:document.querySelector('#live-run').disabled,pauseDisabled:document.querySelector('#live-pause').disabled};
   });
   assert.equal(early.unready,true);assert.equal(early.runDisabled,true);assert.equal(early.pauseDisabled,true);
+  await page.waitForFunction(()=>PGGuide.state.ready,null,{timeout:45000});
+  const blocked=await page.evaluate(()=>{try{void PGLive.frame.contentWindow.PGTour;return false}catch(e){return e.name==='SecurityError'}});
+  assert.equal(blocked,true,'Test must enforce an opaque iframe origin');
   const results=[];
   for(let step=0;step<5;step++){
    if(step)await page.evaluate(step=>{PGSlides.go(6+step);PGLive.open(step)},step);
    await page.waitForFunction(step=>PGGuide.state.ready&&PGGuide.state.step===step,step,{timeout:45000});
    await page.waitForFunction(()=>PGGuide.state.done||(PGGuide.state.paused&&!PGGuide.state.busy),null,{timeout:180000});
-   const state=await page.evaluate(()=>({guide:PGGuide.state,model:PGLive.api.summary(),text:document.querySelector('#live-result').textContent}));
+   const state=await page.evaluate(async()=>({guide:PGGuide.state,model:await PGLive.api.summary(),text:document.querySelector('#live-result').textContent}));
    assert.equal(state.guide.done,true,JSON.stringify(state));
    results.push(state.model);console.log('AUTO STEP',step+1,JSON.stringify(state.model));
    await page.click('#live-return');

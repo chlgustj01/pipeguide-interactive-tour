@@ -49,4 +49,31 @@
   else if(name==='confirmNew'){const n=App.lines.length;click('.askbox [data-a="yes"]');if(App.lines.length<=n||App.history.at(-1)?.type!=='NEW')throw Error('신규 배관 등록을 확인하지 못했습니다.');}
   return summary();
  }};
+
+ // Cross-origin-safe RPC: all application DOM access stays inside this frame.
+ let watched=null;
+ const send=(message)=>parent.postMessage({pgLive:1,...message},'*');
+ document.addEventListener('click',e=>{
+  if(!e.isTrusted||!watched)return;
+  if(!e.target.closest?.(watched))return;
+  e.preventDefault();e.stopImmediatePropagation();watched=null;send({event:'guide-click'});
+ },true);
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!document.querySelector('.askbox'))send({event:'escape'})},true);
+ window.addEventListener('message',async e=>{
+  if(e.source!==parent||e.data?.pgLive!==1||!e.data.id)return;
+  const {id,method,args=[]}=e.data;
+  try{
+   let value;
+   if(method==='ping')value=true;
+   else if(method==='watch'){watched=args[0]||null;value=true}
+   else if(method==='target'){
+    const el=target(args[0]);
+    if(el){el.scrollIntoView({block:'nearest',inline:'nearest'});const r=el.getBoundingClientRect();value={x:r.x,y:r.y,width:r.width,height:r.height}}
+    else value=null;
+   }else if(['enter','restore','prepareSample','action','summary','halt'].includes(method))value=await window.PGLiveApp[method](...args);
+   else throw Error('지원하지 않는 프로그램 명령');
+   send({id,value});
+  }catch(error){send({id,error:error.message})}
+ });
+ send({event:'ready'});
 })();
