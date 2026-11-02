@@ -1,0 +1,30 @@
+(() => {
+ 'use strict';
+ const $=s=>document.querySelector(s),wait=ms=>new Promise(r=>setTimeout(r,ms));
+ // Each action runs once. Result holds never re-prepare or reset the application.
+ const steps=[
+  [['[data-dw="sample"], .dw-steps','샘플 P&ID 불러오기','사전 OCR 인식 결과가 포함된 공개 도면 5장을 불러옵니다. 이미 불러온 샘플은 현재 상태를 유지합니다.','sample'],['.dw-steps','인식 결과 검토','OCR을 새로 실행하는 장면이 아닙니다. 샘플의 인식 결과를 원본과 대조합니다.','review'],['[data-dw="item"]','라인번호 위치 강조','실제 인식 항목을 선택해 원본 도면에서 위치를 확인합니다.','item'],['[data-dw="chk"]','사람이 인식 결과 확인','선택한 라인번호의 검토 상태를 기록합니다.','check'],['[data-dw="reviewed"]','3D 생성 준비','도면 연결·생성 조건을 확인하고 발표로 돌아갑니다.','ready'],['.askbox [data-a="yes"], .dw-insp','미확인 인식 결과 안내','미확인 항목은 읽은 값 또는 기본 구경으로 생성됩니다. 확인 안내를 읽고 샘플 검토를 마칩니다.','confirmReady']],
+  [['[data-dw="build"]','기관실 3D 생성','실제 A* 계산 엔진으로 도면 연결 정보를 배관 모델로 만듭니다. 장비 위치는 가정 배치입니다.','build'],['.dw-insp','생성 결과 확인','생성된 모델과 실패 목록을 확인한 뒤 3D 화면으로 이동합니다.','three'],['#pg-gen [data-k="real"] [data-v="1"]','실제 배관 굵기','실치수 표시를 켭니다. 일시정지 또는 자유 조작에서 배관을 선택하고 드래그로 회전할 수 있습니다.','real'],['#pg-gen [data-line]','733-443 배관 선택','실제 모델 트리에서 배관을 선택해 3D 선택 상태를 확인합니다.','selectPipe'],['#pg-gen [data-act="spin"]','3D 모델 회전','실제 360° 회전 기능으로 배관 배치를 보여준 뒤 회전을 멈춥니다.','rotate'],['#pg-gen [data-act="fit"]','전체 모델 보기','현재 배관·장비가 화면에 들어오도록 시점을 맞춥니다.','fit']],
+  [['#imSize','733-443 · 관경 선택','현재 모델보다 큰 50A로 변경합니다. 화면의 실제 변경 전후 수치를 확인하세요.','size'],['[data-im="addGo"]','관경 변경 실행','실제 도면 사양 데이터를 변경하고 영향 범위를 계산합니다.','change'],['[data-im="sync"]','연결 도면 사양 동기화','동일 배관이 연결된 도면의 사양 데이터를 맞춥니다.','sync'],['[data-im="apply"]','3D 반영 · 공간 검사','변경된 굵기를 모델에 반영하고 간섭·이격 부족을 재검사합니다.','applyModel']],
+  [['[data-rt="gen"]','우회 후보 계산','조건을 통과하는 후보만 생성합니다. A/B/C 개수는 실제 계산 결과에 따라 달라집니다.','generate'],['.rt-cand','후보 수치 비교','길이·엘보·최소 이격·간섭을 확인하고 실제 후보를 선택합니다.','candidate'],['[data-rt="view"][data-v="split"]','기존 / 개선 좌우 비교','실제 모델의 원래 경로와 후보 경로를 비교합니다.','split'],['[data-rt="step"][data-n="3"], .dw-steps','적용 전 검토','후보 상세와 변경 사유를 확인합니다.','reviewRoute'],['[data-rt="apply"]','선택 후보 적용','실제 배관 경로를 바꾸고 변경 이력을 기록합니다.','applyRoute'],['.askbox [data-a="yes"]','경로 적용 확인','선택 후보를 작업 모델에 반영하고 변경 이력이 생성되는지 확인합니다.','confirmRoute']],
+  [['[data-ai="send"]','자연어로 신규 연결','채팅창에 표시된 두 장비를 25A로 연결합니다. 규칙 해석 → A* 탐색 → 실제 성장 애니메이션 순서입니다.','send'],['[data-rt="replay"]','배관 형성 과정 다시 보기','실제 계산된 후보의 성장 과정을 재생합니다.','replay'],['.dw-steps','신규 배관 검토','노즐·간섭·이격·후보를 확인합니다. 원본 P&ID 반영은 별도 검토가 필요합니다.','reviewNew'],['[data-rt="napply"]','신규 배관 등록','모델에 새 배관을 추가하고 NEW 이력을 남깁니다.','register'],['.askbox [data-a="yes"]','신규 등록 확인','등록을 확인하고 실제 배관 수와 NEW 이력이 증가하는지 확인합니다.','confirmNew']]
+ ];
+ let observedDoc;
+ let step=0,index=0,api,epoch=0,paused=false,busy=false,done=false,mode='auto',timer,detach=()=>{};
+ function clear(){clearTimeout(timer);detach();detach=()=>{}}
+ function stop(){epoch++;clear();paused=true;$('#live-spot').hidden=true;$('#live-cursor').hidden=true}
+ function position(){if(!api||done||paused||mode==='free'){$('#live-spot').hidden=true;$('#live-cursor').hidden=true;return;}const a=steps[step][index],el=api.target(a[0]);if(!el){$('#live-spot').hidden=true;$('#live-cursor').hidden=true;return}el.scrollIntoView({block:'nearest',inline:'nearest'});const r=el.getBoundingClientRect();const spot=$('#live-spot');Object.assign(spot.style,{left:r.x-7+'px',top:r.y-7+'px',width:r.width+14+'px',height:r.height+14+'px'});spot.hidden=false;const cursor=$('#live-cursor');cursor.style.left=r.x+r.width/2+'px';cursor.style.top=r.y+r.height/2+'px';cursor.hidden=mode!=='auto'}
+ function controls(){ $('#live-pause').textContent=paused?'가이드 재개':'일시정지';$('#live-run').disabled=busy||done||mode==='free';$('#live-run').textContent=busy?'실제 기능 실행 중…':mode==='manual'?'강조 기능 실행':'현재 기능 실행'; }
+ function result(s){$('#live-result').textContent=`배관 ${s.lines}개 · 733-443 ${s.dn??'—'}A · 공간 문제 ${s.issues}건\n후보 ${s.candidates}개 · 변경 이력 ${s.history}건 · 신규 등록 ${s.newLines}건`}
+ function render(){clear();controls();if(done)return;const a=steps[step][index];$('#live-progress').textContent=`STEP ${step+1}-${index+1} · ${index+1} / ${steps[step].length}`;$('#live-action').textContent=a[1];$('#live-copy').textContent=a[2];position();if(paused||mode==='free')return;
+  if(mode==='manual'){const doc=PGLive.frame.contentDocument;const listener=e=>{if(!e.isTrusted)return;const target=e.target.closest?.(a[0]);if(!target)return;e.preventDefault();e.stopImmediatePropagation();run()};doc.addEventListener('click',listener,true);detach=()=>doc.removeEventListener('click',listener,true)}
+  else timer=setTimeout(run,1600);
+ }
+ async function run(){if(busy||done||mode==='free')return;clear();const ticket=epoch;busy=true;controls();try{position();await wait(450);if(ticket!==epoch||paused||mode==='free')return;$('#live-cursor').classList.add('click');const state=await api.action(steps[step][index][3]);if(ticket!==epoch)return;result(state);$('#live-cursor').classList.remove('click');await wait(2200);if(ticket!==epoch)return;index++;if(index===steps[step].length){done=true;$('#live-progress').textContent=`STEP 0${step+1} 완료`;$('#live-action').textContent='계산 결과를 확인하세요';$('#live-copy').textContent='현재 상태가 다음 STEP으로 이어집니다. 버튼을 누르면 다음 발표 슬라이드로 돌아갑니다.';$('#live-return').hidden=false;$('#live-spot').hidden=true;$('#live-cursor').hidden=true}else render()}catch(e){if(ticket===epoch){paused=true;$('#live-result').textContent='시연을 멈췄습니다: '+e.message+'\n직접 조작하거나 STEP 시작 상태를 복원한 뒤 다시 시도하세요.'}}finally{if(ticket===epoch){busy=false;controls()}} }
+ function start(n,a){stop();const doc=PGLive.frame.contentDocument;if(observedDoc!==doc){observedDoc?.removeEventListener('scroll',position,true);doc.addEventListener('scroll',position,true);observedDoc=doc;}step=n;api=a;index=0;paused=false;busy=false;done=false;mode=$('#live-mode').value;$('#live-return').hidden=true;result(api.summary());render()}
+ $('#live-run').onclick=()=>{paused=false;run()};
+ $('#live-pause').onclick=()=>{paused=!paused;render()};
+ $('#live-mode').onchange=()=>{mode=$('#live-mode').value;render()};
+ new ResizeObserver(position).observe($('#live-viewport'));
+ window.PGGuide={start,stop,run,get state(){return{step,index,paused,busy,done,mode}}};
+})();
